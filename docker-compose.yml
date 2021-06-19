@@ -1,0 +1,72 @@
+version: "2.2"
+services:
+  homer:
+    image: b4bz/homer
+    container_name: homer
+    volumes:
+      - /srv/homer/www/assets/:/www/assets
+    ports:
+      - 80:8080
+    restart: unless-stopped
+  filebrowser:
+    image: filebrowser/filebrowser
+    container_name: filebrowser
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /:/srv
+      - /srv/file-browser/filebrowser.db:/database.db
+      - /srv/file-browser/.filebrowser.json:/.filebrowser.json
+    ports:
+      - 8080:80
+    restart: unless-stopped
+  syncthing:
+    image: syncthing/syncthing
+    container_name: syncthing
+    hostname: my-syncthing
+    network_mode: host
+    environment:
+      - PUID=1000
+      - PGID=1000
+    volumes:
+      - /srv/st-sync:/var/syncthing
+    ports:
+      - 8384:8384
+      - 22000:22000/tcp
+      - 22000:22000/udp
+    restart: unless-stopped
+  gitlab:
+    image: 'gitlab/gitlab-ee:latest'
+    container_name: gitlab
+    hostname: 'gitlab.example.com'
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        external_url 'http://homelab:8929'
+        gitlab_rails['gitlab_shell_ssh_port'] = 2224
+    ports:
+      - '8929:8929'
+      - '2224:22'
+    volumes:
+      - '$GITLAB_HOME/config:/etc/gitlab'
+      - '$GITLAB_HOME/logs:/var/log/gitlab'
+      - '$GITLAB_HOME/data:/var/opt/gitlab'
+  whoogle-search:
+    image: benbusby/whoogle-search
+    container_name: whoogle-search
+    pids_limit: 50
+    mem_limit: 256mb
+    memswap_limit: 256mb
+    user: '102'
+    security_opt:
+      - no-new-privileges
+    cap_drop:
+      - ALL
+    read_only: true
+    tmpfs:
+      - /config/:size=10M,uid=102,gid=102,mode=1700
+      - /var/lib/tor/:size=10M,uid=102,gid=102,mode=1700
+      - /run/tor/:size=1M,uid=102,gid=102,mode=1700
+    ports:
+      - 5000:5000
+    restart: unless-stopped
