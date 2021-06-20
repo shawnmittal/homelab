@@ -70,3 +70,14 @@ services:
     ports:
       - 5000:5000
     restart: unless-stopped
+  searx:
+    image: searx/searx
+    container_name: searx-search
+    security_opt:
+      - no-new-privileges
+    environment:
+      - BASE_URL=http://homelab:8090/
+    volumes:
+      - /srv/searx:/etc/searx
+    ports:
+      - 8090:8080
